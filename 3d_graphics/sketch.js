@@ -4,13 +4,15 @@ const HEIGHT = 600
 
 
 // Global Variables -----------------------------
-let mesh = new Mesh()
-let matProj = new Mat4x4()
-let fTheta = 0;
+
+let matProj;
+let fTheta;
+let mesh;
 
 // Functions ----------------------------------
 
-function setupObject() {
+function createMesh() {
+  
   let tris = [
     // SOUTH
     [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],
@@ -38,6 +40,8 @@ function setupObject() {
 
   ];
 
+  let mesh = new Mesh()
+
   for (let t of tris) {
 
     const p1 = createVector(t[0], t[1], t[2]);
@@ -48,14 +52,16 @@ function setupObject() {
 
     mesh.addTriangle(tri);
   }
+
+  return mesh;
+}
+
+
+function setupProjectionMatrix(fNear, fFar, fFov) {
+  let matProj = new Mat4x4()
   
-  fTheta = 0
-  fNear = 0.1;
-  fFar = 1000.0;
-  fFov = 90.0;
-  fAspectRatio = HEIGHT / WIDTH;
-  fFovRad = 1.0 / Math.tan(fFov * 0.5 / 180.0 * Math.PI);
-  
+  const fAspectRatio = HEIGHT / WIDTH;
+  const fFovRad = 1.0 / Math.tan(fFov * 0.5 / 180.0 * Math.PI);
 
   matProj.m[0][0] = fAspectRatio * fFovRad;
   matProj.m[1][1] = fFovRad;
@@ -63,9 +69,9 @@ function setupObject() {
   matProj.m[3][2] = (-fFar * fNear) / (fFar - fNear);
   matProj.m[2][3] = 1.0;
   matProj.m[3][3] = 0.0;
-  
-}
 
+  return matProj;
+}
 
 function MultiplyMatrixVector(i, m) {
   
@@ -83,20 +89,13 @@ function MultiplyMatrixVector(i, m) {
   return o;
 }
 
-function DrawTriangle(x0, y0, x1, y1, x2, y2, st, fi) {
-  stroke(st);
-  fill(fi)
-  triangle(x0, y0, x1, y1, x2, y2)
-}
-
-
 
 // P5 setup and draw ---------------------
 function setup() {
-  createCanvas(256 * 2, 240 * 2);
-  fElapsedTime = 0;
-  setupObject();
-
+  createCanvas(WIDTH, HEIGHT);
+  fTheta = 0;
+  mesh = createMesh();
+  matProj = setupProjectionMatrix(fNear=0.1, fFar=100.0, fFov=90.0);
 }
 
 function draw() {
@@ -160,18 +159,21 @@ function draw() {
     triProjected.p[1].y += 1.0;
     triProjected.p[2].x += 1.0;
     triProjected.p[2].y += 1.0;
+
     triProjected.p[0].x *= 0.5 * WIDTH;
     triProjected.p[0].y *= 0.5 * HEIGHT;
     triProjected.p[1].x *= 0.5 * WIDTH;
     triProjected.p[1].y *= 0.5 * HEIGHT;
     triProjected.p[2].x *= 0.5 * WIDTH;
     triProjected.p[2].y *= 0.5 * HEIGHT;
-
     
-    DrawTriangle(triProjected.p[0].x, triProjected.p[0].y,
+    // draw the triangle
+    stroke('#fff');
+    fill('#ccc');
+    triangle(
+      triProjected.p[0].x, triProjected.p[0].y,
       triProjected.p[1].x, triProjected.p[1].y,
-      triProjected.p[2].x, triProjected.p[2].y,
-      "#fff", "#ccc");
+      triProjected.p[2].x, triProjected.p[2].y);
   }
 
 }
